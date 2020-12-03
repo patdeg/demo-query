@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	"github.com/gorilla/mux"
+	"github.com/gorilla/mux"	
 	"github.com/jasonlvhit/gocron"
 	"html/template"
 	"log"
@@ -12,7 +12,8 @@ import (
 	"runtime"
 	"time"
 	"database/sql"
-	_ "github.com/mattn/go-sqlite3"
+	_ "github.com/mattn/go-sqlite3"	
+	"github.com/twuillemin/easy-sso-mux/pkg/ssomiddleware"
 )
 
 /*
@@ -24,6 +25,11 @@ import (
 	select * from tbl1;
 */
 
+/*
+	SAML:
+	https://medium.com/@arpitkh96/adding-saml-sso-in-your-golang-service-in-20-minutes-e35a30f52abd
+	https://github.com/twuillemin/easy-sso-mux
+*/
 
 type User struct {
 	Name string `json:"name,omitempty"`
@@ -59,12 +65,23 @@ func HomeHandler(w http.ResponseWriter, r *http.Request) {
 	PrintMemUsage()
 	DebugInfo(r)
 
+	username:= ""
+
+	// https://github.com/twuillemin/easy-sso-mux
+	authentication, err := ssomiddleware.GetSsoAuthentication(r)		
+	if err != nil {
+		Debug("helloHandler: Unable to do get the authentication information", err)
+	} else {
+		username = authentication.User
+	}
+
+
 	// Execute and serve HTML template
 	if err := homeTemplate.Execute(w, template.FuncMap{
 		"Version": VERSION,
 		"Debug": DEBUG,
 		"User": User{
-			Name: "Username",
+			Name: username,
 		},
 	}); err != nil {
 		InternalServerError(w, "Error with homeTemplate: %v", err)
@@ -200,6 +217,7 @@ func main() {
 	// Set VERSION to current unix time
 	VERSION = time.Now().Unix()
 
+	// Open SQLite file
 	var err error
  	db, err = sql.Open("sqlite3", "test.db")
     if err!=nil {
@@ -211,6 +229,13 @@ func main() {
 	// Start worker cron
 	go StartWorker()
 
+	// Create a new instance of the SAML middleware
+	authenticationMiddleware, err := ssomiddleware.New("publicKeyFileName.pub")
+	if err != nil {
+	    Error("Error setting up SAML middleware: %v",err)
+    	os.Exit(1)
+	}
+
 	// Define HTTP Router
 	r := mux.NewRouter()
 	r.HandleFunc("/", HomeHandler)
@@ -221,6 +246,10 @@ func main() {
 	r.PathPrefix("/static/").
 		Handler(http.StripPrefix("/static/", http.FileServer(http.Dir("static"))))
 	r.PathPrefix("/").HandlerFunc(HomeHandler) // Catch-all
+
+	// Add the middleware to the endpoint
+	r.Use(authenticationMiddleware.Middleware)
+
 	http.Handle("/", r)
 
 	// Start application - port 80 within the Docker image,
