@@ -2,6 +2,8 @@ package main
 
 import (
 	"bytes"
+	"context"
+	"database/sql"
 	"encoding/json"
 	"encoding/xml"
 	"fmt"
@@ -11,9 +13,7 @@ import (
 	"os"
 	"runtime"
 	"strconv"
-	"database/sql"
 	"time"
-	"context"
 )
 
 type Results struct {
@@ -282,7 +282,7 @@ func RunQueryWithTimeout(db *sql.DB, sQuery string, timeoutSecs int64) (*Results
 
 	t2 := time.Now()
 	Debug("RunQueryWithTimeout Timing: query:%v data:%v", t1.Sub(t0), t2.Sub(t1))
-	Debug("Results: %v",dataList)
+	Debug("Results: %v", dataList)
 
 	return &dataList, nil
 

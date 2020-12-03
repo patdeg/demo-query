@@ -1,4 +1,5 @@
 demo-query
+bin
 
 # Elastic Beanstalk Files
 .elasticbeanstalk/*

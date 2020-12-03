@@ -24,15 +24,16 @@ Set up Elastic Beanstalk in the cloned folder:
 
 ```
 cd demo-query
-eb init
-eb create
+eb init -p go demo-query-app --region us-west-1
+eb create demo-query-env
 ```
 
-# Deploy the application
-
-You deploy the application to Elastic Beanstalk with
+# Open App
 
 ```
-eb deploy
+eb open
 ```
 
+# Clean-up and terminate App
+
+eb terminate

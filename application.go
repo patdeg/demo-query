@@ -1,9 +1,11 @@
 package main
 
 import (
+	"database/sql"
 	"fmt"
-	"github.com/gorilla/mux"	
+	"github.com/gorilla/mux"
 	"github.com/jasonlvhit/gocron"
+	_ "github.com/mattn/go-sqlite3"
 	"html/template"
 	"log"
 	"net/http"
@@ -11,13 +13,11 @@ import (
 	"os"
 	"runtime"
 	"time"
-	"database/sql"
-	_ "github.com/mattn/go-sqlite3"	
-	"github.com/twuillemin/easy-sso-mux/pkg/ssomiddleware"
+	//"github.com/twuillemin/easy-sso-mux/pkg/ssomiddleware"
 )
 
 /*
-	sqlite3 test.db 
+	sqlite3 test.db
 
 	create table tbl1(one text, two smallint);
 	insert into tbl1 values('hello!',10);
@@ -68,21 +68,23 @@ func HomeHandler(w http.ResponseWriter, r *http.Request) {
 	PrintMemUsage()
 	DebugInfo(r)
 
-	username:= ""
+	username := "username"
 
-	// https://github.com/twuillemin/easy-sso-mux
-	authentication, err := ssomiddleware.GetSsoAuthentication(r)		
-	if err != nil {
-		Debug("helloHandler: Unable to do get the authentication information", err)
-	} else {
-		username = authentication.User
-	}
-
+	/*
+		username:= ""
+		// https://github.com/twuillemin/easy-sso-mux
+		authentication, err := ssomiddleware.GetSsoAuthentication(r)
+		if err != nil {
+			Debug("helloHandler: Unable to do get the authentication information", err)
+		} else {
+			username = authentication.User
+		}
+	*/
 
 	// Execute and serve HTML template
 	if err := homeTemplate.Execute(w, template.FuncMap{
 		"Version": VERSION,
-		"Debug": DEBUG,
+		"Debug":   DEBUG,
 		"User": User{
 			Name: username,
 		},
@@ -92,11 +94,10 @@ func HomeHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-
 // API List handler (/api/list)
 func APIListHandler(w http.ResponseWriter, r *http.Request) {
 	Trace("APIListHandler", r)
-	
+
 	var list = List{
 		List: []string{
 			"AAA",
@@ -116,21 +117,20 @@ func APIQueryHandler(w http.ResponseWriter, r *http.Request) {
 
 	query := string(GetBody(r))
 	Debug("Query: %s", query)
-	
-	results,err := RunQueryWithTimeout(db,query,60)
+
+	results, err := RunQueryWithTimeout(db, query, 60)
 	if err != nil {
-		InternalServerError(w, "Error running query: %v", err)		
+		InternalServerError(w, "Error running query: %v", err)
 		return
 	}
 
-	Debug("Query: %s %t", results.Data[0][0],results.Data[0][0])
+	Debug("Query: %s %t", results.Data[0][0], results.Data[0][0])
 
 	if err := WriteJSON(w, &results); err != nil {
 		InternalServerError(w, "Error with APIQueryHandler: %v", err)
 		return
 	}
 }
-
 
 // Handler to debug an http.Request to the web user
 func DumpHandler(w http.ResponseWriter, r *http.Request) {
@@ -211,9 +211,9 @@ func main() {
 		DEBUG = os.Getenv("DEBUG") == "1"
 	}
 	Debug("DEBUG: %v", DEBUG)
-	
+
 	// Define PORT
-	PORT = "80"
+	PORT = "5000"
 	if os.Getenv("PORT") != "" {
 		PORT = os.Getenv("PORT")
 	}
@@ -229,36 +229,40 @@ func main() {
 
 	// Open SQLite file
 	var err error
- 	db, err = sql.Open("sqlite3", "test.db")
-    if err!=nil {
-    	Error("Error opening database: %v",err)
-    	os.Exit(1)
-    }
-    defer db.Close()
+	db, err = sql.Open("sqlite3", "test.db")
+	if err != nil {
+		Error("Error opening database: %v", err)
+		os.Exit(1)
+	}
+	defer db.Close()
 
 	// Start worker cron
 	go StartWorker()
 
-	// Create a new instance of the SAML middleware
-	authenticationMiddleware, err := ssomiddleware.New("publicKeyFileName.pub")
-	if err != nil {
-	    Error("Error setting up SAML middleware: %v",err)
-    	os.Exit(1)
-	}
+	/*
+		// Create a new instance of the SAML middleware
+		authenticationMiddleware, err := ssomiddleware.New("publicKeyFileName.pub")
+		if err != nil {
+		    Error("Error setting up SAML middleware: %v",err)
+	    	os.Exit(1)
+		}
+	*/
 
 	// Define HTTP Router
 	r := mux.NewRouter()
 	r.HandleFunc("/", HomeHandler)
 	r.HandleFunc("/dump", DumpHandler)
 	r.HandleFunc("/memory", MemoryHandler)
-	r.HandleFunc("/api/list", APIListHandler)	
-	r.HandleFunc("/api/query", APIQueryHandler)	
+	r.HandleFunc("/api/list", APIListHandler)
+	r.HandleFunc("/api/query", APIQueryHandler)
 	r.PathPrefix("/static/").
 		Handler(http.StripPrefix("/static/", http.FileServer(http.Dir("static"))))
 	r.PathPrefix("/").HandlerFunc(HomeHandler) // Catch-all
 
-	// Add the middleware to the endpoint
-	r.Use(authenticationMiddleware.Middleware)
+	/*
+		// Add the middleware to the endpoint
+		r.Use(authenticationMiddleware.Middleware)
+	*/
 
 	http.Handle("/", r)
 
