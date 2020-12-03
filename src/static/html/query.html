@@ -1,0 +1,35 @@
+<div class="row" ng-cloak>
+	<div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
+		<h1>Query</h1>						
+
+		<div class="row">
+			<div class="col-lg-11 col-md-10 col-sm-12 col-xs-12">
+				<ui-codemirror ui-codemirror-opts="editorOptions" ng-model="query"></ui-codemirror>
+				<p class="right">
+					<button class="btn btn-primary" ng-disabled="disable_query" ng-click="submitQuery()">Run Query</button>		
+					<button class="btn btn-info" ng-show="data" ng-click="saveCSV()">Save as CSV</button>
+				</p>				
+				<table class="table table-striped" border="1" ng-show="data">		
+					<thead class="thead-light">
+				  		<tr>
+				    		<th scope="col" ng-repeat="col in data.columns track by $index">{{col}}</th>
+				  		</tr>
+				  	</thead>
+				  	<tbody>
+				  		<tr ng-repeat="row in data.data | limitTo: 12">
+				    		<td ng-repeat="column in row">
+				      			{{ column }}
+				    		</td>
+				  		</tr>
+				  	</tbody>
+				</table>
+			</div>
+			<div class="col-lg-1 col-md-2 col-sm-12 col-xs-12">				
+				<p ng-repeat="example in queryExamples">
+					<button class="btn btn-secondary" ng-click="showQuery($index)">{{example.name}}</button>
+				</p>
+			</div>
+		</div>
+		
+	</div>
+</div>
