@@ -1,0 +1,31 @@
+Minimal Variables
+https://www.bootstrap-live-customizer.com/
+
+@primary: #0F0F59;
+@secondary: #FD2B4C;
+
+@brand-primary: @primary;
+@brand-success: #28a745;
+@brand-info: #17a2b8;
+@brand-warning: #ffc107;
+@brand-danger: #dc3545;
+
+@headings-color: @primary;
+
+@font-family-sans-serif: RidleyGrotesk-SemiBold,Arial,Helvetica,sans-serif!important;
+@font-family-serif: Consolas, "Courier New", monospace;
+@font-family-monospace: Consolas, "Courier New", monospace;
+@font-family-base: @font-family-sans-serif;
+
+@navbar-inverse-color: #FFF;
+@navbar-inverse-bg: @primary;
+@navbar-inverse-link-active-color: #FFF;
+@navbar-inverse-link-active-bg: darken(@navbar-inverse-bg, 6.5%);
+@navbar-inverse-link-color: #FFF;
+@navbar-inverse-link-hover-color: @secondary;
+@navbar-inverse-link-hover-bg: @primary;
+@navbar-inverse-link-disabled-color: #AAA;
+@navbar-inverse-brand-color: #FFF;
+@navbar-inverse-brand-hover-color: @secondary;
+
+
