@@ -56,6 +56,9 @@ var (
 	// PORT
 	PORT string
 
+	// ENDPOINT
+	ENDPOINT string
+
 	MAXLINES = 1000
 )
 
@@ -207,15 +210,22 @@ func main() {
 	if os.Getenv("DEBUG") != "" {
 		DEBUG = os.Getenv("DEBUG") == "1"
 	}
-
+	Debug("DEBUG: %v", DEBUG)
+	
 	// Define PORT
 	PORT = "80"
 	if os.Getenv("PORT") != "" {
 		PORT = os.Getenv("PORT")
 	}
+	Debug("PORT: %v", PORT)
+
+	// Define ENDPOINT
+	ENDPOINT := os.Getenv("API_ENDPOINT")
+	Debug("ENDPOINT: %v", ENDPOINT)
 
 	// Set VERSION to current unix time
 	VERSION = time.Now().Unix()
+	Debug("VERSION: %v", VERSION)
 
 	// Open SQLite file
 	var err error
