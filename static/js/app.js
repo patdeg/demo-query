@@ -207,8 +207,23 @@ myApp.controller('QueryController', ['$scope', '$http',
       {
         name: "2+2",
         query: `SELECT 2+2 AS Four`,
-      },
-      {
+      },{
+        name: "COVID-19",
+        query: `SELECT 
+  date,          -- date of cases reported
+  county,        -- US county
+  state,         -- US state
+  cases,         -- Total cumulative cases in county
+  cases -
+                 -- Previous day cumulative cases (per county)
+    LAG(cases) OVER (PARTITION BY county ORDER BY date) 
+  AS new_cases   -- New Cases in 'county' on 'date'
+FROM
+  covid
+WHERE
+  County='San Diego'
+ORDER BY 1 DESC`,
+      },{
         name: "Create table Tbl",
         query: `CREATE TABLE Tbl (
   ONE TEXT, 
@@ -225,22 +240,6 @@ INSERT INTO Tbl VALUES('!',30);`,
       },{
         name: "Delete table Tbl",
         query: `DROP TABLE Tbl`,
-      },{
-        name: "COVID-19",
-        query: `SELECT 
-  date,       -- date of cases reported
-  county,       -- US county
-  state,        -- US state
-  cases,        -- Total cumulative cases in county
-  cases -
-            -- Previous day cumulative cases (per county)
-    LAG(cases) OVER (PARTITION BY county ORDER BY date) 
-    AS new_cases  -- New Cases in 'county' on 'date'
-FROM
-  covid
-WHERE
-  County='San Diego'
-ORDER BY 1 DESC`,
       },
     ];
 
