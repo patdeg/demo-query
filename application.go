@@ -23,6 +23,7 @@ import (
 	create table tbl1(one text, two smallint);
 	insert into tbl1 values('hello!',10);
 	insert into tbl1 values('goodbye', 20);
+	CREATE UNIQUE INDEX idx_tbl1_one ON tbl1 (one);
 	select * from tbl1;
 */
 

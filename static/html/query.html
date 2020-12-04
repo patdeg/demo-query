@@ -16,8 +16,8 @@
 				  		</tr>
 				  	</thead>
 				  	<tbody>
-				  		<tr ng-repeat="row in data.data | limitTo: 12">
-				    		<td ng-repeat="column in row">
+				  		<tr ng-repeat="row in data.data | limitTo : 12 track by $index">
+				    		<td ng-repeat="column in row track by $index">
 				      			{{ column }}
 				    		</td>
 				  		</tr>
