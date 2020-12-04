@@ -36,4 +36,6 @@ eb open
 
 # Clean-up and terminate App
 
+```
 eb terminate
+```

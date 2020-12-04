@@ -11,8 +11,10 @@ import (
 	"net/http"
 	"net/http/httputil"
 	"os"
+	"regexp"
 	"runtime"
 	"strconv"
+	"strings"
 	"time"
 )
 
@@ -290,6 +292,14 @@ func RunQueryWithTimeout(db *sql.DB, sQuery string, timeoutSecs int64) (*Results
 
 }
 
+func clean(txt string) string {
+	reg, err := regexp.Compile("[\n\t]+")
+	if err != nil {
+		return ""
+	}
+	return strings.Trim(reg.ReplaceAllString(txt, " "), " ")
+}
+
 func ExecQueryWithTimeout(db *sql.DB, queries []string, timeoutSecs int64) error {
 
 	t0 := time.Now()
@@ -299,6 +309,10 @@ func ExecQueryWithTimeout(db *sql.DB, queries []string, timeoutSecs int64) error
 	defer cancel()
 
 	for _, query := range queries { // Run all queries except the last one
+
+		if len(clean(query)) == 0 {
+			continue
+		}
 
 		// Start a SQL statement
 		stmt, err := db.Prepare(query)
@@ -310,11 +324,17 @@ func ExecQueryWithTimeout(db *sql.DB, queries []string, timeoutSecs int64) error
 
 		// Run the query
 		Debug("Running query %v", query)
-		_, err = stmt.ExecContext(ctx)
+		result, err := stmt.ExecContext(ctx)
 		if err != nil {
-			Error("Error with stmt.Query: %v", err)
+			Error("Error with ExecContext: %v", err)
 			return err
 		}
+		rowsAffected, err := result.RowsAffected()
+		if err != nil {
+			Error("Error with RowsAffected: %v", err)
+			return err
+		}
+		Debug("%v rows affected", rowsAffected)
 
 	}
 

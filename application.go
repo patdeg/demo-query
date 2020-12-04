@@ -45,8 +45,6 @@ var (
 	// Primary template for / serving
 	homeTemplate = template.Must(template.New("index.html").Delims("[[", "]]").ParseFiles("templates/index.html"))
 
-	db *sql.DB
-
 	// Global variable identifying the version of the app
 	// Set to the Unix time at start-up
 	VERSION int64
@@ -116,6 +114,14 @@ func APIListHandler(w http.ResponseWriter, r *http.Request) {
 func APIQueryHandler(w http.ResponseWriter, r *http.Request) {
 	Trace("APIQueryHandler", r)
 
+	// Open SQLite file
+	db, err := sql.Open("sqlite3", "file:test.db?cache=shared&mode=rwc&_mutex=full&_sync=NORMAL")
+	if err != nil {
+		InternalServerError(w, "Error opening database: %v", err)
+		return
+	}
+	defer db.Close()
+
 	query := string(GetBody(r))
 	Debug("Query: %s", query)
 
@@ -127,6 +133,7 @@ func APIQueryHandler(w http.ResponseWriter, r *http.Request) {
 			InternalServerError(w, "Error running query: %v", err)
 			return
 		}
+		Debug("APIQueryHandler finished")
 		return
 	}
 
@@ -242,15 +249,6 @@ func main() {
 	// Set VERSION to current unix time
 	VERSION = time.Now().Unix()
 	Debug("VERSION: %v", VERSION)
-
-	// Open SQLite file
-	var err error
-	db, err = sql.Open("sqlite3", "test.db")
-	if err != nil {
-		Error("Error opening database: %v", err)
-		os.Exit(1)
-	}
-	defer db.Close()
 
 	// Start worker cron
 	go StartWorker()
