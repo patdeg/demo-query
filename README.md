@@ -28,10 +28,10 @@ eb init -p go demo-query-app --region us-west-1
 eb create demo-query-env
 ```
 
-# Open App
+Update environment when code changes
 
 ```
-eb open
+eb deploy
 ```
 
 # Clean-up and terminate App
