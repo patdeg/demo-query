@@ -38,4 +38,5 @@ eb open
 
 ```
 eb terminate
+aws elasticbeanstalk delete-application --application-name demo-query-app
 ```
