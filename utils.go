@@ -238,7 +238,6 @@ func RunQueryWithTimeout(db *sql.DB, sQuery string, timeoutSecs int64) (*Results
 		return nil, err
 	}
 	defer rows.Close()
-	Debug("Finished running query %v", sQuery)
 
 	t1 := time.Now()
 
@@ -256,8 +255,11 @@ func RunQueryWithTimeout(db *sql.DB, sQuery string, timeoutSecs int64) (*Results
 	}
 	dataList.Columns = columns
 
-	// Prepare valiables to scan rows
 	count := len(columns)
+	Debug("Number of columns %v", len(dataList.Columns))
+
+	// Prepare valiables to scan rows
+
 	values := make([]interface{}, count)   // array of values in a row
 	scanArgs := make([]interface{}, count) // array of pointers to values in a row
 	for i := range values {
@@ -285,5 +287,41 @@ func RunQueryWithTimeout(db *sql.DB, sQuery string, timeoutSecs int64) (*Results
 	Debug("Results: %v", dataList)
 
 	return &dataList, nil
+
+}
+
+func ExecQueryWithTimeout(db *sql.DB, queries []string, timeoutSecs int64) error {
+
+	t0 := time.Now()
+
+	// Create context with timeoutSecs timeout
+	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(timeoutSecs)*time.Second)
+	defer cancel()
+
+	for _, query := range queries { // Run all queries except the last one
+
+		// Start a SQL statement
+		stmt, err := db.Prepare(query)
+		if err != nil {
+			Error("Error with db.Prepare: %v", err)
+			return err
+		}
+		defer stmt.Close()
+
+		// Run the query
+		Debug("Running query %v", query)
+		_, err = stmt.ExecContext(ctx)
+		if err != nil {
+			Error("Error with stmt.Query: %v", err)
+			return err
+		}
+
+	}
+
+	t1 := time.Now()
+
+	Debug("RunQueryWithTimeout Timing: query:%v", t1.Sub(t0))
+
+	return nil
 
 }

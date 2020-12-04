@@ -24,10 +24,11 @@ config(['$routeProvider', '$locationProvider',
 
     $locationProvider.html5Mode(true);
     $routeProvider
-    .when('/', {
+    /*.when('/', {
       templateUrl: 'static/html/home.html',
       controller:'HomeController'
     })
+    */
     .when('/about', {
       templateUrl: 'static/html/about.html',
       controller: 'AboutController'
@@ -37,7 +38,7 @@ config(['$routeProvider', '$locationProvider',
       controller: 'QueryController'
     })  
     .otherwise({
-      redirectTo: '/'
+      redirectTo: '/query'
     });
 }]);
 
@@ -129,7 +130,19 @@ myApp.controller('QueryController', ['$scope', '$http',
       .success(function(data) {
         console.log("data:",data);
         $scope.disable_submit = false;
-        $scope.data = data;        
+        if (data.data) {
+            for (var r=0;r<data.data.length;r++) {
+              for (var c=0;c<data.data[r].length;c++) {
+                if (typeof data.data[r][c] === 'string' ||  data.data[r][c] instanceof String) {
+                  data.data[r][c] = atob(data.data[r][c]);
+                }
+              }
+            }          
+          $scope.data = data;
+        } else {
+          $scope.data = undefined;
+          alert("Query successful");
+        }
       })
       .error(function(errorMessage, errorCode, errorThrown) {
         console.log("Error - errorMessage, errorCode, errorThrown:", errorMessage, errorCode, errorThrown);
@@ -190,15 +203,25 @@ myApp.controller('QueryController', ['$scope', '$http',
 
     $scope.queryExamples = [
       {
-        name: "Query 1",
-        query: `SELECT
-    1+1 AS Two`
+        name: "2+2",
+        query: `SELECT 2+2 AS Four`
       },
       {
-        name: "Query 2",
-        query: `SELECT
-    2+2 AS Four`
-      },
+        name: "Create table Tbl",
+        query: `CREATE TABLE Tbl (
+  ONE TEXT, 
+  TWO SMALLINT
+)`
+      },{
+        name: "Insert into Tbl",
+        query: `INSERT INTO Tbl VALUES('hello!',10);`
+  },{
+        name: "Query Tbl",
+        query: `SELECT * FROM Tbl`,
+  },{
+        name: "Delete table Tbl",
+        query: `DROP TABLE Tbl`,
+  },
     ];
 
     $scope.showQuery = function(id) {

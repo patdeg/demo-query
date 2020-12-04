@@ -12,6 +12,7 @@ import (
 	"net/http/httputil"
 	"os"
 	"runtime"
+	"strings"
 	"time"
 	//"github.com/twuillemin/easy-sso-mux/pkg/ssomiddleware"
 )
@@ -118,13 +119,28 @@ func APIQueryHandler(w http.ResponseWriter, r *http.Request) {
 	query := string(GetBody(r))
 	Debug("Query: %s", query)
 
-	results, err := RunQueryWithTimeout(db, query, 60)
+	queries := strings.Split(query, ";")
+
+	if len(queries) > 1 {
+		err := ExecQueryWithTimeout(db, queries, 300)
+		if err != nil {
+			InternalServerError(w, "Error running query: %v", err)
+			return
+		}
+		return
+	}
+
+	results, err := RunQueryWithTimeout(db, query, 300)
 	if err != nil {
 		InternalServerError(w, "Error running query: %v", err)
 		return
 	}
 
-	Debug("Query: %s %t", results.Data[0][0], results.Data[0][0])
+	/*
+		for i,r := range results.Data {
+			Debug("Result: %v %s %t", i, r[0], r[0])
+		}
+	*/
 
 	if err := WriteJSON(w, &results); err != nil {
 		InternalServerError(w, "Error with APIQueryHandler: %v", err)
@@ -240,12 +256,12 @@ func main() {
 	go StartWorker()
 
 	/*
-		// Create a new instance of the SAML middleware
-		authenticationMiddleware, err := ssomiddleware.New("publicKeyFileName.pub")
-		if err != nil {
-		    Error("Error setting up SAML middleware: %v",err)
-	    	os.Exit(1)
-		}
+			// Create a new instance of the SAML middleware
+			authenticationMiddleware, err := ssomiddleware.New("publicKeyFileName.pub")
+			if err != nil {
+			    Error("Error setting up SAML middleware: %v",err)
+		    	os.Exit(1)
+			}
 	*/
 
 	// Define HTTP Router
